@@ -10,6 +10,104 @@ import { Search, MapPin, Globe, Settings, Users, Download, Play, Pause, AlertCir
 
 export default function LeadGeneration() {
   const [isScraping, setIsScraping] = useState(false);
+  const [isWebsiteScraping, setIsWebsiteScraping] = useState(false);
+  const [leads, setLeads] = useState([
+    { id: 1, name: "Apex Plumbing Services", phone: "+1 212-555-0198", source: "Google Maps", rating: "4.8 ⭐", website: "apexplumbing.com", status: "New" },
+    { id: 2, name: "City Wide Repairs", phone: "+1 212-555-0233", source: "Google Maps", rating: "4.2 ⭐", website: "citywiderepairs.net", status: "New" },
+    { id: 3, name: "TechFlow Solutions", phone: "+44 20 7123 4567", source: "Website", rating: "N/A", website: "techflow.io", status: "Contacted" },
+  ]);
+  const [mapsQuery, setMapsQuery] = useState({ keyword: "", location: "" });
+  const [scraperUrl, setScraperUrl] = useState("");
+  const [progress, setProgress] = useState(0);
+
+  const simulateMapsScraping = () => {
+    if (isScraping) {
+      setIsScraping(false);
+      setProgress(0);
+      return;
+    }
+
+    if (!mapsQuery.keyword || !mapsQuery.location) {
+      alert("Please enter both keyword and location.");
+      return;
+    }
+
+    setIsScraping(true);
+    setProgress(0);
+
+    let currentProgress = 0;
+    const interval = setInterval(() => {
+      currentProgress += Math.random() * 15;
+      if (currentProgress >= 100) {
+        currentProgress = 100;
+        clearInterval(interval);
+        setIsScraping(false);
+        
+        // Add new mock leads
+        const newLeads = [
+          { 
+            id: Date.now(), 
+            name: `${mapsQuery.keyword} ${mapsQuery.location} Pro`, 
+            phone: `+1 ${Math.floor(Math.random() * 900 + 100)}-555-${Math.floor(Math.random() * 9000 + 1000)}`, 
+            source: "Google Maps", 
+            rating: `${(Math.random() * 2 + 3).toFixed(1)} ⭐`, 
+            website: `${mapsQuery.keyword.toLowerCase().replace(/\s/g, '')}-biz.com`,
+            status: "New"
+          },
+          { 
+            id: Date.now() + 1, 
+            name: `Elite ${mapsQuery.keyword} ${mapsQuery.location}`, 
+            phone: `+1 ${Math.floor(Math.random() * 900 + 100)}-555-${Math.floor(Math.random() * 9000 + 1000)}`, 
+            source: "Google Maps", 
+            rating: `${(Math.random() * 2 + 3).toFixed(1)} ⭐`, 
+            website: `elite-${mapsQuery.keyword.toLowerCase().replace(/\s/g, '')}.net`,
+            status: "New"
+          }
+        ];
+        setLeads(prev => [...newLeads, ...prev]);
+      }
+      setProgress(currentProgress);
+    }, 800);
+  };
+
+  const simulateWebsiteScraping = () => {
+    if (isWebsiteScraping) {
+      setIsWebsiteScraping(false);
+      setProgress(0);
+      return;
+    }
+
+    if (!scraperUrl) {
+      alert("Please enter a target URL.");
+      return;
+    }
+
+    setIsWebsiteScraping(true);
+    setProgress(0);
+
+    let currentProgress = 0;
+    const interval = setInterval(() => {
+      currentProgress += Math.random() * 20;
+      if (currentProgress >= 100) {
+        currentProgress = 100;
+        clearInterval(interval);
+        setIsWebsiteScraping(false);
+        
+        // Add new mock lead from website
+        const newLead = { 
+          id: Date.now(), 
+          name: "Extracted Business", 
+          phone: "+1 800-WEB-DATA", 
+          source: "Website", 
+          rating: "N/A", 
+          website: scraperUrl.replace('https://', '').split('/')[0],
+          status: "New"
+        };
+        setLeads(prev => [newLead, ...prev]);
+      }
+      setProgress(currentProgress);
+    }, 600);
+  };
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl">
@@ -118,11 +216,19 @@ export default function LeadGeneration() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Keyword / Niche</Label>
-                  <Input placeholder="e.g. Coffee Shops, Dentists, Plumbers" />
+                  <Input 
+                    placeholder="e.g. Coffee Shops, Dentists, Plumbers" 
+                    value={mapsQuery.keyword}
+                    onChange={(e) => setMapsQuery({...mapsQuery, keyword: e.target.value})}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Location</Label>
-                  <Input placeholder="e.g. London, UK or New York, NY" />
+                  <Input 
+                    placeholder="e.g. London, UK or New York, NY" 
+                    value={mapsQuery.location}
+                    onChange={(e) => setMapsQuery({...mapsQuery, location: e.target.value})}
+                  />
                 </div>
               </div>
               <div className="space-y-2">
@@ -130,7 +236,7 @@ export default function LeadGeneration() {
                 <Input type="number" defaultValue={100} />
               </div>
               <div className="flex gap-2 pt-4">
-                <Button onClick={() => setIsScraping(!isScraping)} className={isScraping ? "bg-red-500 hover:bg-red-600" : ""}>
+                <Button onClick={simulateMapsScraping} className={isScraping ? "bg-red-500 hover:bg-red-600" : ""}>
                   {isScraping ? <><Pause className="mr-2 h-4 w-4" /> Stop Extraction</> : <><Play className="mr-2 h-4 w-4" /> Start Extraction</>}
                 </Button>
               </div>
@@ -145,11 +251,11 @@ export default function LeadGeneration() {
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Found: 45 leads</span>
-                    <span>Scanning page 3...</span>
+                    <span>Found: {Math.floor(progress / 2)} leads</span>
+                    <span>Scanning page {Math.floor(progress / 30) + 1}...</span>
                   </div>
                   <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-primary w-[45%] animate-pulse"></div>
+                    <div className="h-full bg-primary transition-all duration-500" style={{ width: `${progress}%` }}></div>
                   </div>
                 </div>
               </CardContent>
@@ -169,7 +275,11 @@ export default function LeadGeneration() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Target URL</Label>
-                <Input placeholder="https://example-directory.com/plumbers" />
+                <Input 
+                  placeholder="https://example-directory.com/plumbers" 
+                  value={scraperUrl}
+                  onChange={(e) => setScraperUrl(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Crawl Depth</Label>
@@ -180,10 +290,31 @@ export default function LeadGeneration() {
                 </select>
               </div>
               <div className="flex gap-2 pt-4">
-                <Button><Play className="mr-2 h-4 w-4" /> Start Scraping</Button>
+                <Button onClick={simulateWebsiteScraping} className={isWebsiteScraping ? "bg-red-500 hover:bg-red-600" : ""}>
+                  {isWebsiteScraping ? <><Pause className="mr-2 h-4 w-4" /> Stop Scraping</> : <><Play className="mr-2 h-4 w-4" /> Start Scraping</>}
+                </Button>
               </div>
             </CardContent>
           </Card>
+
+          {isWebsiteScraping && (
+            <Card className="border-primary">
+              <CardHeader>
+                <CardTitle className="text-sm">Scraping Website...</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Analyzing DOM...</span>
+                    <span>{Math.floor(progress)}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-primary transition-all duration-500" style={{ width: `${progress}%` }}></div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="leads" className="space-y-6">
@@ -214,27 +345,15 @@ export default function LeadGeneration() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">Apex Plumbing Services</TableCell>
-                    <TableCell>+1 212-555-0198</TableCell>
-                    <TableCell><Badge variant="outline">Google Maps</Badge></TableCell>
-                    <TableCell>4.8 ⭐</TableCell>
-                    <TableCell className="text-blue-500 hover:underline cursor-pointer">apexplumbing.com</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">City Wide Repairs</TableCell>
-                    <TableCell>+1 212-555-0233</TableCell>
-                    <TableCell><Badge variant="outline">Google Maps</Badge></TableCell>
-                    <TableCell>4.2 ⭐</TableCell>
-                    <TableCell className="text-blue-500 hover:underline cursor-pointer">citywiderepairs.net</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">TechFlow Solutions</TableCell>
-                    <TableCell>+44 20 7123 4567</TableCell>
-                    <TableCell><Badge variant="outline">Website</Badge></TableCell>
-                    <TableCell>N/A</TableCell>
-                    <TableCell className="text-blue-500 hover:underline cursor-pointer">techflow.io</TableCell>
-                  </TableRow>
+                  {leads.map((lead) => (
+                    <TableRow key={lead.id}>
+                      <TableCell className="font-medium">{lead.name}</TableCell>
+                      <TableCell>{lead.phone}</TableCell>
+                      <TableCell><Badge variant="outline">{lead.source}</Badge></TableCell>
+                      <TableCell>{lead.rating}</TableCell>
+                      <TableCell className="text-blue-500 hover:underline cursor-pointer">{lead.website}</TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </CardContent>
