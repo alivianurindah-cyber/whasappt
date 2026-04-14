@@ -14,6 +14,7 @@ import Settings from './pages/Settings';
 import Automations from './pages/Automations';
 import Integrations from './pages/Integrations';
 import Admin from './pages/Admin';
+import LeadGeneration from './pages/LeadGeneration';
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="flows" element={<Flows />} />
           <Route path="automations" element={<Automations />} />
           <Route path="integrations" element={<Integrations />} />
+          <Route path="lead-generation" element={<LeadGeneration />} />
           <Route path="settings" element={<Settings />} />
           <Route path="admin" element={<Admin />} />
           <Route path="*" element={<Navigate to="/" replace />} />

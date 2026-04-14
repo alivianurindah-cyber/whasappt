@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,41 @@ const chats = [
   { id: 4, name: "Diana Prince", lastMessage: "Can I upgrade my plan?", time: "Yesterday", unread: 0, status: "open", pinned: false },
 ];
 
+const initialMessages = [
+  { id: 1, sender: "customer", text: "Hi, I'm having trouble with my recent order #12345.", time: "10:40 AM", read: true },
+  { id: 2, sender: "bot", text: "Hello! I'm the virtual assistant. I can help you with order #12345. What seems to be the issue?", time: "10:40 AM" },
+  { id: 3, sender: "customer", text: "It says delivered but I haven't received it. I need to speak to a human.", time: "10:41 AM" },
+  { id: 4, sender: "system", text: "Bot assigned chat to Agent (Sarah)", time: "10:41 AM" },
+  { id: 5, sender: "note", text: "Checked logistics, package is at the local post office. Will inform customer.", time: "10:42 AM", author: "Sarah" },
+];
+
 export default function LiveChat() {
   const [activeChat, setActiveChat] = useState(chats[0]);
   const [isInternalNote, setIsInternalNote] = useState(false);
+  const [messages, setMessages] = useState(initialMessages);
+  const [inputValue, setInputValue] = useState("");
+
+  const handleSendMessage = () => {
+    if (!inputValue.trim()) return;
+
+    const newMessage = {
+      id: messages.length + 1,
+      sender: isInternalNote ? "note" : "agent",
+      text: inputValue,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      author: "Sarah",
+      read: false
+    };
+
+    setMessages([...messages, newMessage]);
+    setInputValue("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSendMessage();
+    }
+  };
 
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)] gap-4">
@@ -98,54 +130,52 @@ export default function LiveChat() {
               <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md">Today</span>
             </div>
             
-            <div className="flex gap-3 max-w-[80%]">
-              <Avatar className="w-8 h-8 mt-auto">
-                <AvatarFallback>{activeChat.name.substring(0, 1)}</AvatarFallback>
-              </Avatar>
-              <div className="bg-background border rounded-2xl rounded-bl-none p-3 shadow-sm">
-                <p className="text-sm">Hi, I'm having trouble with my recent order #12345.</p>
-                <span className="text-[10px] text-muted-foreground mt-1 block flex items-center gap-1">
-                  10:40 AM • <CheckCircle className="h-3 w-3 text-blue-500" /> Read
-                </span>
-              </div>
-            </div>
+            {messages.map((msg) => {
+              if (msg.sender === 'system') {
+                return (
+                  <div key={msg.id} className="flex justify-center">
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md flex items-center gap-1">
+                      <Bot className="w-3 h-3" /> {msg.text}
+                    </span>
+                  </div>
+                );
+              }
 
-            <div className="flex gap-3 max-w-[80%] self-end flex-row-reverse">
-              <Avatar className="w-8 h-8 mt-auto bg-primary text-primary-foreground">
-                <AvatarFallback><Bot className="w-4 h-4" /></AvatarFallback>
-              </Avatar>
-              <div className="bg-primary text-primary-foreground rounded-2xl rounded-br-none p-3 shadow-sm">
-                <p className="text-sm">Hello! I'm the virtual assistant. I can help you with order #12345. What seems to be the issue?</p>
-                <span className="text-[10px] text-primary-foreground/70 mt-1 block text-right">10:40 AM • Bot</span>
-              </div>
-            </div>
+              if (msg.sender === 'note') {
+                return (
+                  <div key={msg.id} className="flex gap-3 max-w-[80%] self-end flex-row-reverse">
+                    <Avatar className="w-8 h-8 mt-auto bg-yellow-100 text-yellow-700">
+                      <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
+                    </Avatar>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-2xl rounded-br-none p-3 shadow-sm">
+                      <div className="text-xs font-bold text-yellow-700 mb-1">Internal Note ({msg.author})</div>
+                      <p className="text-sm text-yellow-800">{msg.text}</p>
+                      <span className="text-[10px] text-yellow-600 mt-1 block text-right">{msg.time}</span>
+                    </div>
+                  </div>
+                );
+              }
 
-            <div className="flex gap-3 max-w-[80%]">
-              <Avatar className="w-8 h-8 mt-auto">
-                <AvatarFallback>{activeChat.name.substring(0, 1)}</AvatarFallback>
-              </Avatar>
-              <div className="bg-background border rounded-2xl rounded-bl-none p-3 shadow-sm">
-                <p className="text-sm">It says delivered but I haven't received it. I need to speak to a human.</p>
-                <span className="text-[10px] text-muted-foreground mt-1 block">10:41 AM</span>
-              </div>
-            </div>
-            
-            <div className="flex justify-center">
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md flex items-center gap-1">
-                <Bot className="w-3 h-3" /> Bot assigned chat to Agent (Sarah)
-              </span>
-            </div>
-
-            <div className="flex gap-3 max-w-[80%] self-end flex-row-reverse">
-              <Avatar className="w-8 h-8 mt-auto bg-yellow-100 text-yellow-700">
-                <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
-              </Avatar>
-              <div className="bg-yellow-50 border border-yellow-200 rounded-2xl rounded-br-none p-3 shadow-sm">
-                <div className="text-xs font-bold text-yellow-700 mb-1">Internal Note (Sarah)</div>
-                <p className="text-sm text-yellow-800">Checked logistics, package is at the local post office. Will inform customer.</p>
-                <span className="text-[10px] text-yellow-600 mt-1 block text-right">10:42 AM</span>
-              </div>
-            </div>
+              const isAgent = msg.sender === 'agent' || msg.sender === 'bot';
+              
+              return (
+                <div key={msg.id} className={`flex gap-3 max-w-[80%] ${isAgent ? 'self-end flex-row-reverse' : ''}`}>
+                  <Avatar className={`w-8 h-8 mt-auto ${msg.sender === 'bot' ? 'bg-primary text-primary-foreground' : ''}`}>
+                    <AvatarFallback>
+                      {msg.sender === 'bot' ? <Bot className="w-4 h-4" /> : 
+                       msg.sender === 'agent' ? <User className="w-4 h-4" /> : 
+                       activeChat.name.substring(0, 1)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className={`${isAgent ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-background border rounded-bl-none'} rounded-2xl p-3 shadow-sm`}>
+                    <p className="text-sm">{msg.text}</p>
+                    <span className={`text-[10px] mt-1 block flex items-center gap-1 ${isAgent ? 'text-primary-foreground/70 justify-end' : 'text-muted-foreground'}`}>
+                      {msg.time} {msg.sender === 'bot' && '• Bot'} {msg.read && <CheckCircle className="h-3 w-3 text-blue-500" />}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Input Area */}
@@ -174,6 +204,9 @@ export default function LiveChat() {
               </div>
               
               <Input 
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder={isInternalNote ? "Type an internal note (customer won't see this)..." : "Type your message..."} 
                 className={`flex-1 ${isInternalNote ? 'bg-yellow-50 border-yellow-200 placeholder:text-yellow-600/50' : ''}`}
               />
@@ -181,7 +214,11 @@ export default function LiveChat() {
               <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" title="Voice Note">
                 <Mic className="h-4 w-4 text-muted-foreground" />
               </Button>
-              <Button size="icon" className={`shrink-0 ${isInternalNote ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : ''}`}>
+              <Button 
+                onClick={handleSendMessage}
+                size="icon" 
+                className={`shrink-0 ${isInternalNote ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : ''}`}
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </div>

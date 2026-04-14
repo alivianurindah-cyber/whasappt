@@ -12,7 +12,8 @@ import {
   Search,
   Zap,
   Plug,
-  ShieldAlert
+  ShieldAlert,
+  SearchCode
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Inbox (Live Chat)', href: '/chat', icon: MessageSquare },
   { name: 'Contacts (CRM)', href: '/contacts', icon: Users },
+  { name: 'Lead Generation', href: '/lead-generation', icon: SearchCode },
   { name: 'Campaigns', href: '/campaigns', icon: Megaphone },
   { name: 'Flow Builder', href: '/flows', icon: Workflow },
   { name: 'Automations', href: '/automations', icon: Zap },

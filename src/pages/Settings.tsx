@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -8,14 +9,60 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { QrCode, Globe, Palette, CheckCircle2, Flame, Clock, Activity, Bot, Database, Upload, PhoneCall } from "lucide-react";
+import { QrCode, Globe, Palette, CheckCircle2, Flame, Clock, Activity, Bot, Database, Upload, PhoneCall, Loader2, Check } from "lucide-react";
 
 export default function Settings() {
+  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
+  const [qrGenerated, setQrGenerated] = useState(false);
+  const [isSaving, setIsSaving] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [teamMembers, setTeamMembers] = useState([
+    { id: 1, name: "Admin User (You)", email: "admin@whatssaas.com", role: "Owner SaaS" },
+    { id: 2, name: "Sarah Agent", email: "sarah@whatssaas.com", role: "Agent / Support" }
+  ]);
+
+  const handleGenerateQR = () => {
+    setIsGeneratingQR(true);
+    setTimeout(() => {
+      setIsGeneratingQR(false);
+      setQrGenerated(true);
+    }, 2000);
+  };
+
+  const handleSave = (section: string) => {
+    setIsSaving(section);
+    setTimeout(() => {
+      setIsSaving(null);
+      setSuccessMessage(`${section} settings saved successfully!`);
+      setTimeout(() => setSuccessMessage(null), 3000);
+    }, 1500);
+  };
+
+  const inviteMember = () => {
+    const name = prompt("Enter member name:");
+    const email = prompt("Enter member email:");
+    if (name && email) {
+      setTeamMembers([...teamMembers, { id: Date.now(), name, email, role: "Agent / Support" }]);
+    }
+  };
+
+  const removeMember = (id: number) => {
+    setTeamMembers(teamMembers.filter(m => m.id !== id));
+  };
+
   return (
     <div className="flex flex-col gap-6 max-w-5xl">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Manage your connections, AI, billing, and white-label options.</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+          <p className="text-muted-foreground">Manage your connections, AI, billing, and white-label options.</p>
+        </div>
+        {successMessage && (
+          <div className="bg-green-100 text-green-700 px-4 py-2 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+            <Check className="h-4 w-4" />
+            {successMessage}
+          </div>
+        )}
       </div>
 
       <Tabs defaultValue="connections" className="w-full">
@@ -77,11 +124,25 @@ export default function Settings() {
                 <CardDescription>Connect normal WhatsApp using QR scan. Cheap but carries ban risk.</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col items-center justify-center py-8 space-y-6">
-                <div className="p-4 border-2 border-dashed rounded-xl bg-muted/50 relative">
-                  <QrCode className="w-32 h-32 text-muted-foreground opacity-50" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Button variant="secondary" className="shadow-md">Generate QR</Button>
-                  </div>
+                <div className="p-4 border-2 border-dashed rounded-xl bg-muted/50 relative flex items-center justify-center min-h-[160px] w-full max-w-[200px]">
+                  {isGeneratingQR ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                      <span className="text-sm text-muted-foreground">Generating QR...</span>
+                    </div>
+                  ) : qrGenerated ? (
+                    <div className="flex flex-col items-center gap-4">
+                      <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=whatsapp-web-login-simulation" alt="QR Code" className="w-32 h-32" />
+                      <Button variant="outline" size="sm" onClick={() => setQrGenerated(false)}>Reset</Button>
+                    </div>
+                  ) : (
+                    <>
+                      <QrCode className="w-32 h-32 text-muted-foreground opacity-50" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Button variant="secondary" className="shadow-md" onClick={handleGenerateQR}>Generate QR</Button>
+                      </div>
+                    </>
+                  )}
                 </div>
                 
                 <div className="space-y-2 text-center max-w-[280px]">
@@ -176,7 +237,14 @@ export default function Settings() {
               </div>
 
               <div className="pt-4 border-t flex justify-end">
-                <Button className="bg-orange-600 hover:bg-orange-700 text-white">Save Settings</Button>
+                <Button 
+                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                  onClick={() => handleSave("Warm-up")}
+                  disabled={isSaving === "Warm-up"}
+                >
+                  {isSaving === "Warm-up" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Save Settings
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -291,7 +359,13 @@ export default function Settings() {
             </div>
           </div>
           <div className="mt-6 flex justify-end">
-            <Button>Save All AI Settings</Button>
+            <Button 
+              onClick={() => handleSave("AI")}
+              disabled={isSaving === "AI"}
+            >
+              {isSaving === "AI" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Save All AI Settings
+            </Button>
           </div>
         </TabsContent>
 
@@ -303,24 +377,21 @@ export default function Settings() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Admin User (You)</p>
-                    <p className="text-sm text-muted-foreground">admin@whatssaas.com</p>
+                {teamMembers.map((member) => (
+                  <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <p className="font-medium">{member.name}</p>
+                      <p className="text-sm text-muted-foreground">{member.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={member.role.includes("Owner") ? "default" : "outline"}>{member.role}</Badge>
+                      {!member.role.includes("Owner") && (
+                        <Button variant="ghost" size="sm" className="text-destructive" onClick={() => removeMember(member.id)}>Remove</Button>
+                      )}
+                    </div>
                   </div>
-                  <Badge>Owner SaaS</Badge>
-                </div>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Sarah Agent</p>
-                    <p className="text-sm text-muted-foreground">sarah@whatssaas.com</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">Agent / Support</Badge>
-                    <Button variant="ghost" size="sm" className="text-destructive">Remove</Button>
-                  </div>
-                </div>
-                <Button variant="outline" className="w-full">Invite Member</Button>
+                ))}
+                <Button variant="outline" className="w-full" onClick={inviteMember}>Invite Member</Button>
               </div>
             </CardContent>
           </Card>
@@ -340,7 +411,7 @@ export default function Settings() {
                   <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500"/> Unofficial QR Connection</li>
                   <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500"/> Basic Chatbot</li>
                 </ul>
-                <Button variant="outline" className="w-full">Downgrade</Button>
+                <Button variant="outline" className="w-full" onClick={() => handleSave("Plan Downgrade")}>Downgrade</Button>
               </CardContent>
             </Card>
             
@@ -358,10 +429,10 @@ export default function Settings() {
                   <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500"/> AI Flow Builder</li>
                   <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500"/> 5 Team Agents</li>
                 </ul>
-                <Button className="w-full">Manage Subscription</Button>
+                <Button className="w-full" onClick={() => handleSave("Subscription Management")}>Manage Subscription</Button>
               </CardContent>
             </Card>
-
+ 
             <Card>
               <CardHeader>
                 <CardTitle>Agency</CardTitle>
@@ -375,7 +446,7 @@ export default function Settings() {
                   <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500"/> White-label Dashboard</li>
                   <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500"/> Unlimited Agents</li>
                 </ul>
-                <Button variant="outline" className="w-full">Upgrade</Button>
+                <Button variant="outline" className="w-full" onClick={() => handleSave("Plan Upgrade")}>Upgrade</Button>
               </CardContent>
             </Card>
           </div>
@@ -393,31 +464,33 @@ export default function Settings() {
                   <Label>Platform Name</Label>
                   <div className="flex items-center gap-2">
                     <Globe className="w-4 h-4 text-muted-foreground" />
-                    <Input defaultValue="MyCustomSaaS" disabled />
+                    <Input defaultValue="MyCustomSaaS" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Custom Domain</Label>
-                  <Input defaultValue="app.mycustomsaas.com" disabled />
+                  <Input defaultValue="app.mycustomsaas.com" />
                 </div>
                 <div className="space-y-2">
                   <Label>Primary Color</Label>
-                  <div className="flex items-center gap-2">
-                    <Palette className="w-4 h-4 text-muted-foreground" />
-                    <Input type="color" defaultValue="#0f172a" className="w-24 h-10 p-1" disabled />
+                  <div className="flex gap-2">
+                    <div className="w-10 h-10 rounded border bg-primary" />
+                    <Input defaultValue="#2563eb" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Logo URL</Label>
-                  <Input defaultValue="https://mycustomsaas.com/logo.png" disabled />
+                  <Input defaultValue="https://mycustomsaas.com/logo.png" />
                 </div>
               </div>
-              <div className="bg-muted/50 p-4 rounded-lg border flex items-center justify-between">
-                <div className="text-sm">
-                  <p className="font-medium">Upgrade to Agency Plan</p>
-                  <p className="text-muted-foreground">White-label features require the RM499/month Agency plan.</p>
-                </div>
-                <Button variant="outline">Upgrade Now</Button>
+              <div className="pt-4 border-t flex justify-end">
+                <Button 
+                  onClick={() => handleSave("White-label")}
+                  disabled={isSaving === "White-label"}
+                >
+                  {isSaving === "White-label" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Save White-label Settings
+                </Button>
               </div>
             </CardContent>
           </Card>
